@@ -421,6 +421,18 @@ class HKIPostNLCard extends HTMLElement {
                 opacity: 0.9; 
             }
 
+            .stats-bar {
+                background: var(--secondary-background-color, #f5f5f5);
+                padding: 8px 16px;
+                border-bottom: 1px solid var(--divider-color, #eee);
+                text-align: center;
+            }
+            .stats-text {
+                font-size: 0.85em;
+                color: var(--secondary-text-color);
+                font-weight: 500;
+            }
+
             .tabs { 
                 display: flex; 
                 background: var(--secondary-background-color, #f5f5f5); 
@@ -582,6 +594,8 @@ class HKIPostNLCard extends HTMLElement {
             .ph-status-icon { 
                 color: var(--postnl-orange);
                 flex-shrink: 0;
+                display: flex;
+                align-items: center;
             }
 
             .ph-right { 
@@ -705,8 +719,12 @@ class HKIPostNLCard extends HTMLElement {
                         <span class="header-stats">${activeCount} onderweg • ${recentCount} recent</span>
                     </div>
                 </div>
-                ` : ''}
-                <div class="header-animation"></div>
+                ` : `
+                <div class="stats-bar">
+                    <span class="stats-text">${activeCount} onderweg • ${recentCount} recent</span>
+                </div>
+                `}
+                ${this.config.show_placeholder !== false ? `<div class="header-animation"></div>` : ''}
                 <div class="tabs">
                     <div class="tab ${this._activeTab === 'onderweg' ? 'active' : ''}" data-tab="onderweg">Onderweg</div>
                     ${this.config.show_delivered ? `<div class="tab ${this._activeTab === 'bezorgd' ? 'active' : ''}" data-tab="bezorgd">Bezorgd</div>` : ''}
@@ -837,8 +855,7 @@ class HKIPostNLCardEditor extends LitElement {
                 margin-bottom: 16px;
             }
             ha-selector,
-            ha-textfield,
-            ha-switch {
+            ha-textfield {
                 width: 100%;
                 margin-bottom: 16px;
             }
@@ -847,14 +864,17 @@ class HKIPostNLCardEditor extends LitElement {
                 align-items: center;
                 gap: 16px;
                 margin-bottom: 8px;
+                width: 100%;
+            }
+            .switch-row ha-switch {
+                flex-shrink: 0;
+                margin-bottom: 0;
             }
             .switch-row span {
                 font-size: 14px;
                 color: var(--primary-text-color);
                 flex: 1;
-            }
-            ha-switch {
-                flex-shrink: 0;
+                line-height: 1.4;
             }
         `;
     }
