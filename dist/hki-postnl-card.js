@@ -1,7 +1,7 @@
 // HKI PostNL Card v3.0.0
 import { LitElement, html, css } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
-const CARD_VERSION = '3.0.0';
+const CARD_VERSION = '3.0.1';
 
 // Embedded PostNL Logo as SVG
 const POSTNL_LOGO_SVG = `data:image/svg+xml;base64,${btoa(`
@@ -126,8 +126,11 @@ class HKIPostNLCard extends HTMLElement {
         
         if (Array.isArray(attrs)) {
             shipments = attrs;
-        } else if (attrs.en_route || attrs.delivered) {
-            shipments = [...(attrs.en_route || []), ...(attrs.delivered || [])];
+        } else if (attrs.en_route || attrs.delivered || attrs.Enroute || attrs.Delivered) {
+            // Support both lowercase (en_route/delivered) and capitalized (Enroute/Delivered) formats
+            const enroute = attrs.en_route || attrs.Enroute || [];
+            const delivered = attrs.delivered || attrs.Delivered || [];
+            shipments = [...enroute, ...delivered];
         } else if (attrs.shipments) {
             shipments = attrs.shipments;
         } else if (attrs.parcels) {
@@ -159,6 +162,11 @@ class HKIPostNLCard extends HTMLElement {
         
         if (Array.isArray(attrs)) {
             shipments = attrs;
+        } else if (attrs.en_route || attrs.delivered || attrs.Enroute || attrs.Delivered) {
+            // Support both lowercase (en_route/delivered) and capitalized (Enroute/Delivered) formats
+            const enroute = attrs.en_route || attrs.Enroute || [];
+            const delivered = attrs.delivered || attrs.Delivered || [];
+            shipments = [...enroute, ...delivered];
         } else if (attrs.shipments) {
             shipments = attrs.shipments;
         } else if (attrs.parcels) {
@@ -929,7 +937,7 @@ window.customCards.push({
 });
 
 console.info(
-    '%c HKI-POSTNL-CARD %c v3.0.0 ',
+    '%c HKI-POSTNL-CARD %c v3.0.1 ',
     'color: white; background: #ed8c00; font-weight: bold;',
     'color: #ed8c00; background: white; font-weight: bold;'
 );
