@@ -126,11 +126,10 @@ class HKIPostNLCard extends HTMLElement {
         
         if (Array.isArray(attrs)) {
             shipments = attrs;
-        } else if (attrs.en_route || attrs.delivered || attrs.Enroute || attrs.Delivered) {
-            // Support both lowercase (en_route/delivered) and capitalized (Enroute/Delivered) formats
-            const enroute = attrs.en_route || attrs.Enroute || [];
-            const delivered = attrs.delivered || attrs.Delivered || [];
-            shipments = [...enroute, ...delivered];
+        } else if (attrs.enroute || attrs.en_route || attrs.delivered) {
+            const enrouteArray = Array.isArray(attrs.enroute) ? attrs.enroute : (Array.isArray(attrs.en_route) ? attrs.en_route : []);
+            const deliveredArray = Array.isArray(attrs.delivered) ? attrs.delivered : [];
+            shipments = [...enrouteArray, ...deliveredArray];
         } else if (attrs.shipments) {
             shipments = attrs.shipments;
         } else if (attrs.parcels) {
@@ -941,3 +940,4 @@ console.info(
     'color: white; background: #ed8c00; font-weight: bold;',
     'color: #ed8c00; background: white; font-weight: bold;'
 );
+
