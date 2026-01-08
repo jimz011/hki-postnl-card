@@ -1,44 +1,22 @@
-// HKI PostNL Card v3.0.0
+/**
+ * HKI PostNL Card
+ * Version: 1.0.0
+ * Author: Jimz011
+ * Repository: https://github.com/jimz011/hki-postnl-card
+ * * BELANGRIJK:
+ * Deze kaart vereist de PostNL integratie van Arjen Bos.
+ * Installeer deze eerst via HACS of handmatig:
+ * https://github.com/arjenbos/ha-postnl
+ */
+
 import { LitElement, html, css } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
-const CARD_VERSION = '3.0.0';
+const CARD_VERSION = '1.0.0';
 
-// Embedded PostNL Logo as SVG
-const POSTNL_LOGO_SVG = `data:image/svg+xml;base64,${btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <path d="M100,20 L180,100 L100,180 L20,100 Z" fill="#FF6200"/>
-  <path d="M100,35 L165,100 L100,165 L35,100 Z" fill="white"/>
-  <g transform="translate(100, 65)">
-    <rect x="-2.5" y="3" width="5" height="7" fill="#FF6200"/>
-    <rect x="-8" y="6" width="3" height="4" fill="#FF6200"/>
-    <rect x="5" y="6" width="3" height="4" fill="#FF6200"/>
-    <circle cx="-6" cy="4" r="2" fill="#FF6200"/>
-    <circle cx="0" cy="1" r="2" fill="#FF6200"/>
-    <circle cx="6" cy="4" r="2" fill="#FF6200"/>
-  </g>
-  <text x="100" y="125" text-anchor="middle" fill="#FF6200" font-family="Arial, sans-serif" font-weight="700" font-size="28">postnl</text>
-</svg>
-`)}`;
-
-const VAN_SVG = `data:image/svg+xml;base64,${btoa(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
-  <rect x="15" y="35" width="75" height="30" fill="#FF6200" rx="3"/>
-  <path d="M 15 35 L 25 25 L 45 25 L 45 35 Z" fill="#E55800"/>
-  <rect x="27" y="27" width="15" height="6" fill="#B3D9FF" rx="1"/>
-  <rect x="50" y="38" width="35" height="10" fill="white" rx="1"/>
-  <text x="67" y="46" text-anchor="middle" fill="#FF6200" font-family="Arial" font-weight="bold" font-size="8">PostNL</text>
-  <circle cx="35" cy="67" r="8" fill="#333"/>
-  <circle cx="35" cy="67" r="4" fill="#666"/>
-  <circle cx="75" cy="67" r="8" fill="#333"/>
-  <circle cx="75" cy="67" r="4" fill="#666"/>
-  <g opacity="0.5">
-    <circle cx="12" cy="50" r="3" fill="#ccc">
-      <animate attributeName="cx" from="12" to="5" dur="1s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" from="0.5" to="0" dur="1s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-</svg>
-`)}`;
+// Default External Assets
+const DEFAULT_LOGO = "https://github.com/jimz011/hki-postnl-card/blob/main/images/postnl-logo.png?raw=true";
+const DEFAULT_VAN = "https://github.com/jimz011/hki-postnl-card/blob/main/images/postnl-van.gif?raw=true";
+const DEFAULT_BANNER = "https://github.com/jimz011/hki-postnl-card/blob/main/images/postnl-banner.jpg?raw=true";
 
 class HKIPostNLCard extends HTMLElement {
     constructor() {
@@ -60,24 +38,32 @@ class HKIPostNLCard extends HTMLElement {
 
     setConfig(config) {
         if (!config.entity) {
-            throw new Error("Kies een entiteit (bijv. sensor.postnl)");
+            // Allow render even if entity missing to show error state
         }
         this.config = {
             title: 'PostNL',
-            days_back: 7,
+            days_back: 90,
             show_delivered: true,
             show_sent: true,
             show_animation: true,
-            logo_path: '',
-            van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff',
+            show_header: true,
+            show_placeholder: true,
+            logo_path: DEFAULT_LOGO,
+            van_path: DEFAULT_VAN,
+            header_color: '',
+            header_text_color: '',
+            placeholder_image: DEFAULT_BANNER,
             distribution_entity: '',
+            layout_order: ['header', 'animation', 'tabs', 'list'],
             ...config
         };
         
-        this._logoSrc = this.config.logo_path || POSTNL_LOGO_SVG;
-        this._vanSrc = this.config.van_path || VAN_SVG;
+        if (!Array.isArray(this.config.layout_order) || this.config.layout_order.length === 0) {
+            this.config.layout_order = ['header', 'animation', 'tabs', 'list'];
+        }
+
+        this._logoSrc = this.config.logo_path || DEFAULT_LOGO;
+        this._vanSrc = this.config.van_path || DEFAULT_VAN;
         
         if (this._hass) {
             this.render();
@@ -90,17 +76,21 @@ class HKIPostNLCard extends HTMLElement {
 
     static getStubConfig() {
         return { 
-            entity: "sensor.postnl",
-            distribution_entity: "",
+            entity: "sensor.postnl_delivery",
+            distribution_entity: "sensor.postnl_distribution",
             title: "PostNL",
-            days_back: 7,
+            days_back: 90,
             show_delivered: true,
             show_sent: true,
             show_animation: true,
-            logo_path: '',
-            van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff'
+            show_header: true,
+            show_placeholder: true,
+            logo_path: DEFAULT_LOGO,
+            van_path: DEFAULT_VAN,
+            placeholder_image: DEFAULT_BANNER,
+            header_color: '',
+            header_text_color: '',
+            layout_order: ['header', 'animation', 'tabs', 'list']
         };
     }
 
@@ -116,6 +106,7 @@ class HKIPostNLCard extends HTMLElement {
     }
 
     getData() {
+        if (!this.config.entity) return null;
         const entityId = this.config.entity;
         const stateObj = this._hass ? this._hass.states[entityId] : null;
 
@@ -126,8 +117,10 @@ class HKIPostNLCard extends HTMLElement {
         
         if (Array.isArray(attrs)) {
             shipments = attrs;
-        } else if (attrs.en_route || attrs.delivered) {
-            shipments = [...(attrs.en_route || []), ...(attrs.delivered || [])];
+        } else if (attrs.enroute || attrs.en_route || attrs.delivered) {
+            const enrouteArray = Array.isArray(attrs.enroute) ? attrs.enroute : (Array.isArray(attrs.en_route) ? attrs.en_route : []);
+            const deliveredArray = Array.isArray(attrs.delivered) ? attrs.delivered : [];
+            shipments = [...enrouteArray, ...deliveredArray];
         } else if (attrs.shipments) {
             shipments = attrs.shipments;
         } else if (attrs.parcels) {
@@ -137,7 +130,7 @@ class HKIPostNLCard extends HTMLElement {
         }
 
         const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - (this.config.days_back || 7));
+        cutoffDate.setDate(cutoffDate.getDate() - (this.config.days_back || 90));
 
         shipments = shipments.filter(item => {
             if (!item.delivered) return true;
@@ -159,6 +152,10 @@ class HKIPostNLCard extends HTMLElement {
         
         if (Array.isArray(attrs)) {
             shipments = attrs;
+        } else if (attrs.en_route || attrs.delivered || attrs.Enroute || attrs.Delivered) {
+            const enroute = attrs.en_route || attrs.Enroute || [];
+            const delivered = attrs.delivered || attrs.Delivered || [];
+            shipments = [...enroute, ...delivered];
         } else if (attrs.shipments) {
             shipments = attrs.shipments;
         } else if (attrs.parcels) {
@@ -223,9 +220,11 @@ class HKIPostNLCard extends HTMLElement {
         const recentCount = shipments.filter(s => s.delivered).length;
 
         const statsEl = this.shadowRoot.querySelector('.header-stats');
-        if (statsEl) {
-            statsEl.textContent = `${activeCount} onderweg • ${recentCount} recent`;
-        }
+        const statsBarEl = this.shadowRoot.querySelector('.stats-text');
+        
+        const statsText = `${activeCount} onderweg • ${recentCount} recent`;
+        if (statsEl) statsEl.textContent = statsText;
+        if (statsBarEl) statsBarEl.textContent = statsText;
 
         this.shadowRoot.querySelectorAll('.tab').forEach(tab => {
             if (tab.dataset.tab === this._activeTab) {
@@ -251,6 +250,8 @@ class HKIPostNLCard extends HTMLElement {
             const vanPos = selectedParcelData.delivered ? '75%' : '25%';
             const statusText = selectedParcelData.delivered ? 'Bezorgd' : 'Onderweg';
             
+            animationEl.classList.add('animation-active');
+            
             animationEl.innerHTML = `
                 <div class="visual-road">
                     <div class="house-bg">🏠</div>
@@ -261,9 +262,22 @@ class HKIPostNLCard extends HTMLElement {
                     <strong>${selectedParcelData.name}</strong> • ${statusText}
                 </div>
             `;
-            animationEl.classList.add('visible');
         } else {
-            animationEl.classList.remove('visible');
+            animationEl.classList.remove('animation-active');
+            
+            if (this.config.show_placeholder) {
+                if (!this.config.placeholder_image) {
+                    animationEl.innerHTML = `
+                        <div class="animation-placeholder">
+                            <div class="placeholder-text">Selecteer een pakket voor animatie</div>
+                        </div>
+                    `;
+                } else {
+                    animationEl.innerHTML = '';
+                }
+            } else {
+                animationEl.innerHTML = '';
+            }
         }
     }
 
@@ -335,16 +349,18 @@ class HKIPostNLCard extends HTMLElement {
     render() {
         const shipments = this.getData();
         const distributionShipments = this.getDistributionData();
+        
         if (!shipments) {
-            this.shadowRoot.innerHTML = `<ha-card style="padding:16px; color:red;">Entiteit niet gevonden: ${this.config.entity}</ha-card>`;
+            this.shadowRoot.innerHTML = `<ha-card style="padding:16px; color:red;">Entiteit niet gevonden of niet geconfigureerd.<br><br>Installeer a.u.b. de <a href="https://github.com/arjenbos/ha-postnl" target="_blank">arjenbos/ha-postnl</a> integratie.</ha-card>`;
             return;
         }
 
         const displayedShipments = this.getFilteredShipments(shipments, distributionShipments);
         const activeCount = shipments.filter(s => !s.delivered).length;
         const recentCount = shipments.filter(s => s.delivered).length;
-        const headerColor = this.config.header_color || '#602f9c';
-        const headerTextColor = this.config.header_text_color || '#ffffff';
+        const headerColor = this.config.header_color || 'var(--card-background-color)';
+        const headerTextColor = this.config.header_text_color || 'var(--primary-text-color)';
+        const placeholderImage = this.config.placeholder_image || DEFAULT_BANNER;
 
         const css = `
         <style>
@@ -352,6 +368,7 @@ class HKIPostNLCard extends HTMLElement {
                 --postnl-orange: #ed8c00; 
                 --postnl-purple: ${headerColor};
                 --header-text: ${headerTextColor};
+                --placeholder-image: ${placeholderImage ? `url('${placeholderImage}')` : 'none'};
                 --bg-color: var(--card-background-color, white); 
             }
             ha-card { 
@@ -361,6 +378,7 @@ class HKIPostNLCard extends HTMLElement {
                 border-radius: 12px; 
             }
             
+            /* Header Block */
             .header { 
                 background: var(--postnl-purple);
                 padding: 16px; 
@@ -388,7 +406,19 @@ class HKIPostNLCard extends HTMLElement {
                 font-size: 0.8em; 
                 opacity: 0.9; 
             }
+            .stats-bar {
+                background: var(--secondary-background-color, #f5f5f5);
+                padding: 8px 16px;
+                border-bottom: 1px solid var(--divider-color, #eee);
+                text-align: center;
+            }
+            .stats-text {
+                font-size: 0.85em;
+                color: var(--secondary-text-color);
+                font-weight: 500;
+            }
 
+            /* Tabs Block */
             .tabs { 
                 display: flex; 
                 background: var(--secondary-background-color, #f5f5f5); 
@@ -423,25 +453,28 @@ class HKIPostNLCard extends HTMLElement {
                 background: var(--postnl-orange); 
             }
 
+            /* Animation Block */
             .header-animation {
-                background: linear-gradient(to bottom, rgba(96, 47, 156, 0.1), transparent);
+                background-image: var(--placeholder-image);
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
                 padding: 16px;
                 border-bottom: 1px solid var(--divider-color);
-                display: none;
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease-out;
+                height: 150px;
+                box-sizing: border-box;
             }
-            .header-animation.visible {
-                display: block;
-                max-height: 150px;
+            .header-animation.animation-active {
+                background-image: none !important;
+                background-color: var(--card-background-color);
             }
             .visual-road { 
                 position: relative; 
                 height: 80px; 
                 display: flex; 
                 align-items: center; 
-                overflow: hidden; 
+                overflow: hidden;
+                background: var(--card-background-color, white);
             }
             .road-line { 
                 position: absolute; 
@@ -478,11 +511,24 @@ class HKIPostNLCard extends HTMLElement {
                 margin-top: 8px;
                 font-size: 0.85em;
                 color: var(--secondary-text-color);
+                background: var(--card-background-color, white);
             }
             .animation-info strong {
                 color: var(--primary-text-color);
             }
+            .animation-placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 118px;
+            }
+            .placeholder-text {
+                color: var(--secondary-text-color);
+                font-size: 0.9em;
+                opacity: 0.6;
+            }
 
+            /* List Block */
             .list { 
                 padding: 0; 
                 margin: 0; 
@@ -530,10 +576,13 @@ class HKIPostNLCard extends HTMLElement {
                 color: var(--secondary-text-color); 
                 display: flex; 
                 align-items: center; 
-                gap: 6px; 
+                gap: 10px; 
             }
             .ph-status-icon { 
-                color: var(--postnl-orange); 
+                color: var(--postnl-orange);
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
             }
 
             .ph-right { 
@@ -592,7 +641,6 @@ class HKIPostNLCard extends HTMLElement {
                 background: #d17a00;
                 box-shadow: 0 2px 8px rgba(237, 140, 0, 0.3);
             }
-
             .list::-webkit-scrollbar {
                 width: 6px;
             }
@@ -606,6 +654,7 @@ class HKIPostNLCard extends HTMLElement {
         </style>
         `;
 
+        // Pre-build list HTML
         let listHtml = '';
         if (displayedShipments.length === 0) {
             listHtml = `
@@ -647,8 +696,9 @@ class HKIPostNLCard extends HTMLElement {
             }).join('');
         }
 
-        const html = `
-            <ha-card>
+        // Define Blocks
+        const blocks = {
+            header: this.config.show_header ? `
                 <div class="header">
                     <img src="${this._logoSrc}" alt="PostNL Logo">
                     <div class="header-info">
@@ -656,17 +706,27 @@ class HKIPostNLCard extends HTMLElement {
                         <span class="header-stats">${activeCount} onderweg • ${recentCount} recent</span>
                     </div>
                 </div>
+                ` : `
+                <div class="stats-bar">
+                    <span class="stats-text">${activeCount} onderweg • ${recentCount} recent</span>
+                </div>
+            `,
+            animation: this.config.show_placeholder !== false ? `<div class="header-animation"></div>` : '',
+            tabs: `
                 <div class="tabs">
                     <div class="tab ${this._activeTab === 'onderweg' ? 'active' : ''}" data-tab="onderweg">Onderweg</div>
                     ${this.config.show_delivered ? `<div class="tab ${this._activeTab === 'bezorgd' ? 'active' : ''}" data-tab="bezorgd">Bezorgd</div>` : ''}
                     ${this.config.show_sent ? `<div class="tab ${this._activeTab === 'verzonden' ? 'active' : ''}" data-tab="verzonden">Verzonden</div>` : ''}
                 </div>
-                <div class="header-animation"></div>
-                <div class="list">${listHtml}</div>
-            </ha-card>
-        `;
+            `,
+            list: `<div class="list">${listHtml}</div>`
+        };
 
-        this.shadowRoot.innerHTML = css + html;
+        // Construct HTML based on layout order
+        const layoutOrder = this.config.layout_order || ['header', 'animation', 'tabs', 'list'];
+        const contentHtml = layoutOrder.map(blockName => blocks[blockName] || '').join('');
+
+        this.shadowRoot.innerHTML = css + `<ha-card>${contentHtml}</ha-card>`;
         this._isRendered = true;
         
         this.shadowRoot.querySelectorAll('.tab').forEach(el => {
@@ -678,7 +738,7 @@ class HKIPostNLCard extends HTMLElement {
     }
 }
 
-// EDITOR CLASS - Proper LitElement with imported Lit
+// EDITOR CLASS
 class HKIPostNLCardEditor extends LitElement {
     static get properties() {
         return {
@@ -694,19 +754,25 @@ class HKIPostNLCardEditor extends LitElement {
 
     setConfig(config) {
         this._config = {
-            entity: '',
-            distribution_entity: '',
+            entity: 'sensor.postnl_delivery',
+            distribution_entity: 'sensor.postnl_distribution',
             title: 'PostNL',
-            days_back: 7,
+            days_back: 90,
             show_delivered: true,
             show_sent: true,
             show_animation: true,
-            logo_path: '',
-            van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff',
+            show_header: true,
+            show_placeholder: true,
+            logo_path: DEFAULT_LOGO,
+            van_path: DEFAULT_VAN,
+            header_color: '',
+            header_text_color: '',
+            placeholder_image: DEFAULT_BANNER,
+            layout_order: ['header', 'animation', 'tabs', 'list'],
             ...config
         };
+        // Ensure defaults if keys missing
+        if (!this._config.layout_order) this._config.layout_order = ['header', 'animation', 'tabs', 'list'];
     }
 
     _renderEntityPicker(label, field, value, helper = "") {
@@ -740,7 +806,7 @@ class HKIPostNLCardEditor extends LitElement {
         }
 
         // Handle boolean fields
-        const bools = new Set(['show_delivered', 'show_sent', 'show_animation']);
+        const bools = new Set(['show_delivered', 'show_sent', 'show_animation', 'show_header', 'show_placeholder']);
         if (bools.has(field)) {
             value = !!(ev.target?.checked ?? value);
         }
@@ -750,6 +816,24 @@ class HKIPostNLCardEditor extends LitElement {
 
         this.dispatchEvent(new CustomEvent("config-changed", {
             detail: { config: next },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    _moveBlock(index, direction) {
+        if (!this._config.layout_order) return;
+        const newOrder = [...this._config.layout_order];
+        
+        if (direction === 'up' && index > 0) {
+            [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+        } else if (direction === 'down' && index < newOrder.length - 1) {
+            [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+        }
+        
+        this._config = { ...this._config, layout_order: newOrder };
+        this.dispatchEvent(new CustomEvent("config-changed", {
+            detail: { config: this._config },
             bubbles: true,
             composed: true
         }));
@@ -784,19 +868,46 @@ class HKIPostNLCardEditor extends LitElement {
                 margin-bottom: 16px;
             }
             ha-selector,
-            ha-textfield,
-            ha-switch {
+            ha-textfield {
                 width: 100%;
                 margin-bottom: 16px;
             }
             .switch-row {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
+                gap: 16px;
+                margin-bottom: 8px;
+                width: 100%;
+            }
+            .switch-row ha-switch {
+                flex-shrink: 0;
+                margin-bottom: 0;
             }
             .switch-row span {
                 font-size: 14px;
+                color: var(--primary-text-color);
+                flex: 1;
+                line-height: 1.4;
+            }
+            /* Sortable list styling */
+            .sort-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--secondary-background-color);
+                border: 1px solid var(--divider-color);
+                padding: 8px 12px;
+                margin-bottom: 8px;
+                border-radius: 4px;
+            }
+            .sort-label {
+                font-weight: 500;
+                text-transform: capitalize;
+            }
+            .sort-actions ha-icon-button {
+                color: var(--secondary-text-color);
+            }
+            .sort-actions ha-icon-button:hover {
                 color: var(--primary-text-color);
             }
         `;
@@ -804,6 +915,15 @@ class HKIPostNLCardEditor extends LitElement {
 
     render() {
         if (!this._config) return html``;
+        
+        const layoutLabels = {
+            'header': 'Header (Logo/Titel)',
+            'animation': 'Animatie / Afbeelding',
+            'tabs': 'Navigatie Tabs',
+            'list': 'Pakketten Lijst'
+        };
+
+        const currentLayout = this._config.layout_order || ['header', 'animation', 'tabs', 'list'];
 
         return html`
             <div class="card-config">
@@ -813,14 +933,14 @@ class HKIPostNLCardEditor extends LitElement {
                     "PostNL Ontvangst Entity",
                     "entity",
                     this._config.entity,
-                    "De entity voor ontvangen pakketten (bijv. sensor.postnl)"
+                    "De entity voor ontvangen pakketten (standaard: sensor.postnl_delivery)"
                 )}
 
                 ${this._renderEntityPicker(
                     "PostNL Verzending Entity (Optioneel)",
                     "distribution_entity",
                     this._config.distribution_entity || "",
-                    "De entity voor verzonden pakketten (bijv. sensor.postnl_distribution)"
+                    "De entity voor verzonden pakketten (standaard: sensor.postnl_distribution)"
                 )}
 
                 <ha-textfield
@@ -830,20 +950,47 @@ class HKIPostNLCardEditor extends LitElement {
                     data-field="title"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">De naam die bovenaan de kaart wordt weergegeven</div>
 
                 <ha-textfield
                     label="Aantal dagen geschiedenis"
                     type="number"
-                    .value=${String(this._config.days_back || 7)}
+                    .value=${String(this._config.days_back || 90)}
                     min="1"
                     max="365"
                     data-field="days_back"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">Hoeveel dagen terug bezorgde pakketten worden getoond (1-365)</div>
+
+                <div class="section">Layout Volgorde</div>
+                <div class="helper-text">Gebruik de pijltjes om de blokken te herschikken</div>
+                ${currentLayout.map((item, index) => html`
+                    <div class="sort-item">
+                        <span class="sort-label">${layoutLabels[item] || item}</span>
+                        <div class="sort-actions">
+                            <ha-icon-button 
+                                .path=${"M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z"}
+                                @click=${() => this._moveBlock(index, 'up')}
+                                ?disabled=${index === 0}
+                            ></ha-icon-button>
+                            <ha-icon-button 
+                                .path=${"M7.41,8.59L12,13.17L16.59,8.59L18,10L12,16L6,10L7.41,8.59Z"}
+                                @click=${() => this._moveBlock(index, 'down')}
+                                ?disabled=${index === currentLayout.length - 1}
+                            ></ha-icon-button>
+                        </div>
+                    </div>
+                `)}
 
                 <div class="section">Weergave Opties</div>
+
+                <div class="switch-row">
+                    <ha-switch
+                        .checked=${this._config.show_header !== false}
+                        data-field="show_header"
+                        @change=${this._changed}
+                    ></ha-switch>
+                    <span>Toon header</span>
+                </div>
 
                 <div class="switch-row">
                     <ha-switch
@@ -862,7 +1009,6 @@ class HKIPostNLCardEditor extends LitElement {
                     ></ha-switch>
                     <span>Toon "Verzonden" tab</span>
                 </div>
-                <div class="helper-text">Vereist verzending entity om data te tonen</div>
 
                 <div class="switch-row">
                     <ha-switch
@@ -872,7 +1018,15 @@ class HKIPostNLCardEditor extends LitElement {
                     ></ha-switch>
                     <span>Toon bezorganimatie</span>
                 </div>
-                <div class="helper-text">Toon het bezorgbusje in de header bij geselecteerd pakket</div>
+
+                <div class="switch-row">
+                    <ha-switch
+                        .checked=${this._config.show_placeholder !== false}
+                        data-field="show_placeholder"
+                        @change=${this._changed}
+                    ></ha-switch>
+                    <span>Toon placeholder</span>
+                </div>
 
                 <div class="section">Uiterlijk</div>
 
@@ -880,7 +1034,7 @@ class HKIPostNLCardEditor extends LitElement {
                     <ha-textfield
                         label="Header Kleur"
                         type="color"
-                        .value=${this._config.header_color || '#602f9c'}
+                        .value=${this._config.header_color || '#f0f0f0'}
                         data-field="header_color"
                         @input=${this._changed}
                     ></ha-textfield>
@@ -888,30 +1042,35 @@ class HKIPostNLCardEditor extends LitElement {
                     <ha-textfield
                         label="Header Tekst Kleur"
                         type="color"
-                        .value=${this._config.header_text_color || '#ffffff'}
+                        .value=${this._config.header_text_color || '#000000'}
                         data-field="header_text_color"
                         @input=${this._changed}
                     ></ha-textfield>
                 </div>
-                <div class="helper-text">Kies de kleuren voor de header balk en tekst</div>
 
                 <ha-textfield
-                    label="PostNL Logo Pad (Optioneel)"
-                    .value=${this._config.logo_path || ''}
-                    placeholder="/local/postnl-logo.png"
+                    label="Placeholder Afbeelding (URL)"
+                    .value=${this._config.placeholder_image || DEFAULT_BANNER}
+                    placeholder="http://..."
+                    data-field="placeholder_image"
+                    @input=${this._changed}
+                ></ha-textfield>
+
+                <ha-textfield
+                    label="PostNL Logo (URL)"
+                    .value=${this._config.logo_path || DEFAULT_LOGO}
+                    placeholder="http://..."
                     data-field="logo_path"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">Pad naar je eigen PostNL logo - laat leeg voor standaard embedded logo</div>
 
                 <ha-textfield
-                    label="Bezorgbusje Afbeelding Pad (Optioneel)"
-                    .value=${this._config.van_path || ''}
-                    placeholder="/local/postnl-van.gif"
+                    label="Bezorgbusje Afbeelding (URL)"
+                    .value=${this._config.van_path || DEFAULT_VAN}
+                    placeholder="http://..."
                     data-field="van_path"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">Pad naar je eigen bezorgbusje afbeelding - laat leeg voor standaard embedded animatie</div>
             </div>
         `;
     }
@@ -929,7 +1088,7 @@ window.customCards.push({
 });
 
 console.info(
-    '%c HKI-POSTNL-CARD %c v3.0.0 ',
+    '%c HKI-POSTNL-CARD %c v1.0.0 ',
     'color: white; background: #ed8c00; font-weight: bold;',
     'color: #ed8c00; background: white; font-weight: bold;'
 );
