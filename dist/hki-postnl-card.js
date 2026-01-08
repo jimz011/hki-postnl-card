@@ -270,11 +270,17 @@ class HKIPostNLCard extends HTMLElement {
                 </div>
             `;
         } else {
-            animationEl.innerHTML = `
-                <div class="animation-placeholder">
-                    <div class="placeholder-text">Selecteer een pakket voor animatie</div>
-                </div>
-            `;
+            // Show text only if no placeholder image is defined
+            if (!this.config.placeholder_image) {
+                animationEl.innerHTML = `
+                    <div class="animation-placeholder">
+                        <div class="placeholder-text">Selecteer een pakket voor animatie</div>
+                    </div>
+                `;
+            } else {
+                // Show nothing - the CSS background-image will display
+                animationEl.innerHTML = '';
+            }
         }
     }
 
@@ -451,7 +457,8 @@ class HKIPostNLCard extends HTMLElement {
                 height: 80px; 
                 display: flex; 
                 align-items: center; 
-                overflow: hidden; 
+                overflow: hidden;
+                background: var(--card-background-color, white);
             }
             .road-line { 
                 position: absolute; 
@@ -488,6 +495,7 @@ class HKIPostNLCard extends HTMLElement {
                 margin-top: 8px;
                 font-size: 0.85em;
                 color: var(--secondary-text-color);
+                background: var(--card-background-color, white);
             }
             .animation-info strong {
                 color: var(--primary-text-color);
@@ -678,12 +686,12 @@ class HKIPostNLCard extends HTMLElement {
                         <span class="header-stats">${activeCount} onderweg • ${recentCount} recent</span>
                     </div>
                 </div>
+                <div class="header-animation"></div>
                 <div class="tabs">
                     <div class="tab ${this._activeTab === 'onderweg' ? 'active' : ''}" data-tab="onderweg">Onderweg</div>
                     ${this.config.show_delivered ? `<div class="tab ${this._activeTab === 'bezorgd' ? 'active' : ''}" data-tab="bezorgd">Bezorgd</div>` : ''}
                     ${this.config.show_sent ? `<div class="tab ${this._activeTab === 'verzonden' ? 'active' : ''}" data-tab="verzonden">Verzonden</div>` : ''}
                 </div>
-                <div class="header-animation"></div>
                 <div class="list">${listHtml}</div>
             </ha-card>
         `;
