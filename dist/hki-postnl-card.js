@@ -68,6 +68,8 @@ class HKIPostNLCard extends HTMLElement {
             show_delivered: true,
             show_sent: true,
             show_animation: true,
+            show_header: true,
+            show_placeholder: true,
             logo_path: '',
             van_path: '',
             header_color: '#602f9c',
@@ -259,6 +261,9 @@ class HKIPostNLCard extends HTMLElement {
             const vanPos = selectedParcelData.delivered ? '75%' : '25%';
             const statusText = selectedParcelData.delivered ? 'Bezorgd' : 'Onderweg';
             
+            // Add class to hide background image via CSS
+            animationEl.classList.add('animation-active');
+            
             animationEl.innerHTML = `
                 <div class="visual-road">
                     <div class="house-bg">🏠</div>
@@ -270,15 +275,23 @@ class HKIPostNLCard extends HTMLElement {
                 </div>
             `;
         } else {
-            // Show text only if no placeholder image is defined
-            if (!this.config.placeholder_image) {
-                animationEl.innerHTML = `
-                    <div class="animation-placeholder">
-                        <div class="placeholder-text">Selecteer een pakket voor animatie</div>
-                    </div>
-                `;
+            // Remove class to show placeholder image again
+            animationEl.classList.remove('animation-active');
+            
+            // Reset to show placeholder image or hide based on config
+            if (this.config.show_placeholder) {
+                // Show text only if no placeholder image is defined
+                if (!this.config.placeholder_image) {
+                    animationEl.innerHTML = `
+                        <div class="animation-placeholder">
+                            <div class="placeholder-text">Selecteer een pakket voor animatie</div>
+                        </div>
+                    `;
+                } else {
+                    animationEl.innerHTML = '';
+                }
             } else {
-                // Show nothing - the CSS background-image will display
+                // Hide placeholder completely
                 animationEl.innerHTML = '';
             }
         }
@@ -452,6 +465,10 @@ class HKIPostNLCard extends HTMLElement {
                 height: 150px;
                 box-sizing: border-box;
             }
+            .header-animation.animation-active {
+                background-image: none !important;
+                background-color: var(--card-background-color);
+            }
             .visual-road { 
                 position: relative; 
                 height: 80px; 
@@ -560,10 +577,11 @@ class HKIPostNLCard extends HTMLElement {
                 color: var(--secondary-text-color); 
                 display: flex; 
                 align-items: center; 
-                gap: 6px; 
+                gap: 10px; 
             }
             .ph-status-icon { 
-                color: var(--postnl-orange); 
+                color: var(--postnl-orange);
+                flex-shrink: 0;
             }
 
             .ph-right { 
@@ -679,6 +697,7 @@ class HKIPostNLCard extends HTMLElement {
 
         const html = `
             <ha-card>
+                ${this.config.show_header ? `
                 <div class="header">
                     <img src="${this._logoSrc}" alt="PostNL Logo">
                     <div class="header-info">
@@ -686,6 +705,7 @@ class HKIPostNLCard extends HTMLElement {
                         <span class="header-stats">${activeCount} onderweg • ${recentCount} recent</span>
                     </div>
                 </div>
+                ` : ''}
                 <div class="header-animation"></div>
                 <div class="tabs">
                     <div class="tab ${this._activeTab === 'onderweg' ? 'active' : ''}" data-tab="onderweg">Onderweg</div>
@@ -731,6 +751,8 @@ class HKIPostNLCardEditor extends LitElement {
             show_delivered: true,
             show_sent: true,
             show_animation: true,
+            show_header: true,
+            show_placeholder: true,
             logo_path: '',
             van_path: '',
             header_color: '#602f9c',
@@ -823,12 +845,16 @@ class HKIPostNLCardEditor extends LitElement {
             .switch-row {
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                margin-bottom: 16px;
+                gap: 16px;
+                margin-bottom: 8px;
             }
             .switch-row span {
                 font-size: 14px;
                 color: var(--primary-text-color);
+                flex: 1;
+            }
+            ha-switch {
+                flex-shrink: 0;
             }
         `;
     }
@@ -878,6 +904,16 @@ class HKIPostNLCardEditor extends LitElement {
 
                 <div class="switch-row">
                     <ha-switch
+                        .checked=${this._config.show_header !== false}
+                        data-field="show_header"
+                        @change=${this._changed}
+                    ></ha-switch>
+                    <span>Toon header</span>
+                </div>
+                <div class="helper-text">Toon de PostNL logo en titel bovenaan de kaart</div>
+
+                <div class="switch-row">
+                    <ha-switch
                         .checked=${this._config.show_delivered !== false}
                         data-field="show_delivered"
                         @change=${this._changed}
@@ -904,6 +940,16 @@ class HKIPostNLCardEditor extends LitElement {
                     <span>Toon bezorganimatie</span>
                 </div>
                 <div class="helper-text">Toon het bezorgbusje in de header bij geselecteerd pakket</div>
+
+                <div class="switch-row">
+                    <ha-switch
+                        .checked=${this._config.show_placeholder !== false}
+                        data-field="show_placeholder"
+                        @change=${this._changed}
+                    ></ha-switch>
+                    <span>Toon placeholder</span>
+                </div>
+                <div class="helper-text">Toon placeholder afbeelding/tekst wanneer geen pakket is geselecteerd</div>
 
                 <div class="section">Uiterlijk</div>
 
