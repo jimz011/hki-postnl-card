@@ -72,8 +72,8 @@ class HKIPostNLCard extends HTMLElement {
             show_placeholder: true,
             logo_path: '',
             van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff',
+            header_color: '',
+            header_text_color: '',
             placeholder_image: '',
             distribution_entity: '',
             ...config
@@ -100,10 +100,13 @@ class HKIPostNLCard extends HTMLElement {
             show_delivered: true,
             show_sent: true,
             show_animation: true,
+            show_header: true,
+            show_placeholder: true,
             logo_path: '',
             van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff'
+            header_color: '',
+            header_text_color: '',
+            placeholder_image: ''
         };
     }
 
@@ -373,8 +376,8 @@ class HKIPostNLCard extends HTMLElement {
         const displayedShipments = this.getFilteredShipments(shipments, distributionShipments);
         const activeCount = shipments.filter(s => !s.delivered).length;
         const recentCount = shipments.filter(s => s.delivered).length;
-        const headerColor = this.config.header_color || '#602f9c';
-        const headerTextColor = this.config.header_text_color || '#ffffff';
+        const headerColor = this.config.header_color || 'var(--card-background-color)';
+        const headerTextColor = this.config.header_text_color || 'var(--primary-text-color)';
         const placeholderImage = this.config.placeholder_image || '';
 
         const css = `
@@ -773,8 +776,8 @@ class HKIPostNLCardEditor extends LitElement {
             show_placeholder: true,
             logo_path: '',
             van_path: '',
-            header_color: '#602f9c',
-            header_text_color: '#ffffff',
+            header_color: '',
+            header_text_color: '',
             placeholder_image: '',
             ...config
         };
@@ -811,7 +814,7 @@ class HKIPostNLCardEditor extends LitElement {
         }
 
         // Handle boolean fields
-        const bools = new Set(['show_delivered', 'show_sent', 'show_animation']);
+        const bools = new Set(['show_delivered', 'show_sent', 'show_animation', 'show_header', 'show_placeholder']);
         if (bools.has(field)) {
             value = !!(ev.target?.checked ?? value);
         }
@@ -977,7 +980,7 @@ class HKIPostNLCardEditor extends LitElement {
                     <ha-textfield
                         label="Header Kleur"
                         type="color"
-                        .value=${this._config.header_color || '#602f9c'}
+                        .value=${this._config.header_color || '#f0f0f0'}
                         data-field="header_color"
                         @input=${this._changed}
                     ></ha-textfield>
@@ -985,12 +988,12 @@ class HKIPostNLCardEditor extends LitElement {
                     <ha-textfield
                         label="Header Tekst Kleur"
                         type="color"
-                        .value=${this._config.header_text_color || '#ffffff'}
+                        .value=${this._config.header_text_color || '#000000'}
                         data-field="header_text_color"
                         @input=${this._changed}
                     ></ha-textfield>
                 </div>
-                <div class="helper-text">Kies de kleuren voor de header balk en tekst</div>
+                <div class="helper-text">Kies de kleuren voor de header balk en tekst (laat leeg voor standaard kaart kleuren)</div>
 
                 <ha-textfield
                     label="Placeholder Afbeelding (Optioneel)"
