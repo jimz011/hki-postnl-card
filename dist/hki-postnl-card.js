@@ -72,7 +72,7 @@ class HKIPostNLCard extends HTMLElement {
             van_path: '',
             header_color: '#602f9c',
             header_text_color: '#ffffff',
-            placeholder_background: 'transparent',
+            placeholder_image: '',
             distribution_entity: '',
             ...config
         };
@@ -356,7 +356,7 @@ class HKIPostNLCard extends HTMLElement {
         const recentCount = shipments.filter(s => s.delivered).length;
         const headerColor = this.config.header_color || '#602f9c';
         const headerTextColor = this.config.header_text_color || '#ffffff';
-        const placeholderBg = this.config.placeholder_background || 'transparent';
+        const placeholderImage = this.config.placeholder_image || '';
 
         const css = `
         <style>
@@ -364,7 +364,7 @@ class HKIPostNLCard extends HTMLElement {
                 --postnl-orange: #ed8c00; 
                 --postnl-purple: ${headerColor};
                 --header-text: ${headerTextColor};
-                --placeholder-bg: ${placeholderBg};
+                --placeholder-image: ${placeholderImage ? `url(${placeholderImage})` : 'none'};
                 --bg-color: var(--card-background-color, white); 
             }
             ha-card { 
@@ -437,7 +437,10 @@ class HKIPostNLCard extends HTMLElement {
             }
 
             .header-animation {
-                background: var(--placeholder-bg);
+                background-image: var(--placeholder-image);
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
                 padding: 16px;
                 border-bottom: 1px solid var(--divider-color);
                 height: 150px;
@@ -724,7 +727,7 @@ class HKIPostNLCardEditor extends LitElement {
             van_path: '',
             header_color: '#602f9c',
             header_text_color: '#ffffff',
-            placeholder_background: 'transparent',
+            placeholder_image: '',
             ...config
         };
     }
@@ -916,13 +919,13 @@ class HKIPostNLCardEditor extends LitElement {
                 <div class="helper-text">Kies de kleuren voor de header balk en tekst</div>
 
                 <ha-textfield
-                    label="Animatie Achtergrond"
-                    .value=${this._config.placeholder_background || 'transparent'}
-                    placeholder="transparent"
-                    data-field="placeholder_background"
+                    label="Placeholder Afbeelding (Optioneel)"
+                    .value=${this._config.placeholder_image || ''}
+                    placeholder="/local/placeholder.jpg"
+                    data-field="placeholder_image"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">Achtergrondkleur voor het animatie-gebied (bijv. transparent, #f5f5f5, rgba(0,0,0,0.1))</div>
+                <div class="helper-text">Afbeelding voor het animatie-gebied wanneer geen pakket is geselecteerd (bijv. /local/placeholder.jpg)</div>
 
                 <ha-textfield
                     label="PostNL Logo Pad (Optioneel)"
