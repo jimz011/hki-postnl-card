@@ -1,4 +1,4 @@
-// HKI PostNL Card v3.0.0
+// HKI PostNL Card v3.0.2
 import { LitElement, html, css } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
 const CARD_VERSION = '3.0.2';
@@ -920,12 +920,13 @@ class HKIPostNLCardEditor extends LitElement {
 
                 <ha-textfield
                     label="Animatie Achtergrond Kleur"
-                    type="color"
+                    type="text"
                     .value=${this._config.placeholder_background || 'transparent'}
+                    placeholder="transparent"
                     data-field="placeholder_background"
                     @input=${this._changed}
                 ></ha-textfield>
-                <div class="helper-text">Achtergrondkleur voor het animatie-gebied (wanneer geen pakket is geselecteerd)</div>
+                <div class="helper-text">Achtergrondkleur voor het animatie-gebied (bijv. transparent, #f5f5f5, rgba(0,0,0,0.1))</div>
 
                 <ha-textfield
                     label="PostNL Logo Pad (Optioneel)"
