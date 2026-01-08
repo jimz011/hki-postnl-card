@@ -1,7 +1,7 @@
-// HKI PostNL Card v3.0.2
+// HKI PostNL Card v3.0.0
 import { LitElement, html, css } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
-const CARD_VERSION = '3.0.2';
+const CARD_VERSION = '3.0.1';
 
 // Embedded PostNL Logo as SVG
 const POSTNL_LOGO_SVG = `data:image/svg+xml;base64,${btoa(`
@@ -102,7 +102,6 @@ class HKIPostNLCard extends HTMLElement {
             van_path: '',
             header_color: '#602f9c',
             header_text_color: '#ffffff'
-            placeholder_background: 'transparent'
         };
     }
 
@@ -271,7 +270,6 @@ class HKIPostNLCard extends HTMLElement {
                 </div>
             `;
         } else {
-            // Show placeholder to maintain card height
             animationEl.innerHTML = `
                 <div class="animation-placeholder">
                     <div class="placeholder-text">Selecteer een pakket voor animatie</div>
@@ -444,7 +442,6 @@ class HKIPostNLCard extends HTMLElement {
                 border-bottom: 1px solid var(--divider-color);
                 height: 150px;
                 box-sizing: border-box;
-                transition: background 0.3s ease-out;
             }
             .visual-road { 
                 position: relative; 
@@ -919,8 +916,7 @@ class HKIPostNLCardEditor extends LitElement {
                 <div class="helper-text">Kies de kleuren voor de header balk en tekst</div>
 
                 <ha-textfield
-                    label="Animatie Achtergrond Kleur"
-                    type="text"
+                    label="Animatie Achtergrond"
                     .value=${this._config.placeholder_background || 'transparent'}
                     placeholder="transparent"
                     data-field="placeholder_background"
@@ -962,7 +958,7 @@ window.customCards.push({
 });
 
 console.info(
-    '%c HKI-POSTNL-CARD %c v3.0.2 ',
+    '%c HKI-POSTNL-CARD %c v3.0.1 ',
     'color: white; background: #ed8c00; font-weight: bold;',
     'color: #ed8c00; background: white; font-weight: bold;'
 );
