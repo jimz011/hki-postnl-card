@@ -1,17 +1,8 @@
-/**
- * HKI PostNL Card
- * Version: 1.0.0
- * Author: Jimz011
- * Repository: https://github.com/jimz011/hki-postnl-card
- * * BELANGRIJK:
- * Deze kaart vereist de PostNL integratie van Arjen Bos.
- * Installeer deze eerst via HACS of handmatig:
- * https://github.com/arjenbos/ha-postnl
- */
+// HKI PostNL Card
 
 import { LitElement, html, css } from "https://unpkg.com/lit@2.8.0/index.js?module";
 
-const CARD_VERSION = '1.0.0';
+const CARD_VERSION = '1.0.1';
 
 // Default External Assets
 const DEFAULT_LOGO = "https://github.com/jimz011/hki-postnl-card/blob/main/images/postnl-logo.png?raw=true";
@@ -910,6 +901,34 @@ class HKIPostNLCardEditor extends LitElement {
             .sort-actions ha-icon-button:hover {
                 color: var(--primary-text-color);
             }
+            /* Warning Box Styling */
+            .warning-box {
+                background-color: var(--secondary-background-color);
+                border: 1px solid var(--divider-color);
+                border-left: 4px solid #ed8c00;
+                padding: 12px;
+                margin-bottom: 24px;
+                font-size: 13px;
+                line-height: 1.4;
+                border-radius: 4px;
+                color: var(--primary-text-color);
+            }
+            .warning-title {
+                font-weight: bold;
+                font-size: 14px;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+            }
+            .warning-box a {
+                color: var(--primary-color, #03a9f4);
+                text-decoration: underline;
+            }
+            .warning-error {
+                margin-top: 8px; 
+                color: var(--error-color, red);
+                font-weight: 500;
+            }
         `;
     }
 
@@ -927,6 +946,14 @@ class HKIPostNLCardEditor extends LitElement {
 
         return html`
             <div class="card-config">
+                <div class="warning-box">
+                    <div class="warning-title">⚠️ Requirement</div>
+                    <div><strong>This card relies on the PostNL integration.</strong></div>
+                    <div>You must install and configure the <a href="https://github.com/arjenbos/ha-postnl" target="_blank">PostNL Integration by Arjen Bos</a> before using this card.</div>
+                    <div style="margin-top: 8px;">Please read the documentation at <a href="https://github.com/jimz011/hki-postnl-card" target="_blank">github.com/jimz011/hki-postnl-card</a> to set up this card.</div>
+                    <div class="warning-error">This card may contain bugs. Use at your own risk!</div>
+                </div>
+
                 <div class="section">Basis Instellingen</div>
                 
                 ${this._renderEntityPicker(
@@ -1083,12 +1110,12 @@ window.customCards = window.customCards || [];
 window.customCards.push({
     type: "hki-postnl-card",
     name: "HKI PostNL Card",
-    description: "PostNL tracking card met visuele bezorganimatie",
+    description: "PostNL Track & Trace Card",
     preview: true
 });
 
 console.info(
-    '%c HKI-POSTNL-CARD %c v1.0.0 ',
+    '%c HKI-POSTNL-CARD %c v1.0.1 ',
     'color: white; background: #ed8c00; font-weight: bold;',
     'color: #ed8c00; background: white; font-weight: bold;'
 );
