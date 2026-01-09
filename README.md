@@ -6,6 +6,9 @@
 [![Downloads](https://img.shields.io/github/downloads/jimz011/hki-postnl-card/total.svg)](https://github.com/jimz011/hki-postnl-card/releases)
 [![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg)](https://github.com/jimz011/hki-postnl-card/graphs/commit-activity)
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg)](https://www.buymeacoffee.com/w8Jnf6Hit)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg)](https://paypal.me/JimmySchings)
+
 A clean, visual tracking card for Home Assistant that displays your PostNL packages with a unique delivery animation. This card allows you to track incoming and outgoing shipments, view history, and customize the layout entirely to your liking.
 
 <img src="https://github.com/jimz011/hki-postnl-card/blob/main/screenshots/screenshot-1.png?raw=true" width="600" alt="HKI PostNL Card Example"><img src="https://github.com/jimz011/hki-postnl-card/blob/main/screenshots/screenshot-2.png?raw=true" width="600" alt="HKI PostNL Card Example 2">
